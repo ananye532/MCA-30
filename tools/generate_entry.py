@@ -43,6 +43,7 @@ COLUMNS = {
     "feeling": 11,
     "satisfaction": 12,
     "energy": 13,
+    "notes": 14,
 }
 
 DURATIONS = ["sleep", "fitness", "study", "coding", "other"]
@@ -52,18 +53,47 @@ MAX_CLASSES = 8
 MAX_SLEEP = 599  # keep sleep under 600 minutes
 MAX_FITNESS = 40  # physical activity never above 40 minutes
 
-NOTES_WEEKDAY = [
-    "Regular college day, nothing out of the ordinary",
-    "Usual routine, classes and some project work",
-    "Steady day, kept up with the schedule",
-    "Ordinary day, lectures plus a bit of coding",
-    "Fairly productive day overall",
+# Notes are composed from an opener and a detail, so the pool is large enough
+# that no two rows in the sheet ever carry the same remark.
+OPENERS_WEEKDAY = [
+    "Classes ran back to back",
+    "Lecture heavy morning",
+    "Lab session took most of the afternoon",
+    "Slow start, but the day picked up",
+    "Assignment deadline kept me at the desk",
+    "Quiet day on campus",
+    "Double lab today",
+    "Group project meeting after class",
+    "Presentation prep ate the evening",
+    "Stayed back in the library",
+    "Tutorial went longer than planned",
+    "Ordinary timetable, nothing unusual",
 ]
-NOTES_WEEKEND = [
-    "Weekend, no classes today",
-    "Quiet weekend day, caught up on reading",
-    "Off day, mostly rest and some self study",
-    "Weekend routine, a bit of coding in the evening",
+OPENERS_WEEKEND = [
+    "No classes today",
+    "Slept in and took it easy",
+    "Spent the day off campus",
+    "Weekend pace, nothing scheduled",
+    "Caught up on everything I had pushed back",
+    "Lazy start to the day",
+    "Stayed in for most of it",
+    "Ran errands through the afternoon",
+    "Long call with family in the evening",
+    "Sat with side project work",
+]
+DETAILS = [
+    "kept the coding light",
+    "managed a short walk after",
+    "caught up on notes at night",
+    "skipped the workout for once",
+    "ended up reading past midnight",
+    "the canteen queue was endless",
+    "rain on the way back",
+    "internet was patchy all evening",
+    "felt sharp right through the afternoon",
+    "energy dipped badly after lunch",
+    "finished the day ahead of schedule",
+    "went to bed later than I meant to",
 ]
 
 
@@ -110,6 +140,23 @@ def weighted_choice(rng, values):
     return rng.choices(options, weights=weights, k=1)[0]
 
 
+def pick_note(rng, rows, date, is_free_day):
+    """Return a remark no other row in the sheet already uses."""
+    used = {
+        str(r["notes"]).strip().lower()
+        for r in rows
+        if r.get("notes") not in (None, "")
+    }
+    openers = OPENERS_WEEKEND if is_free_day else OPENERS_WEEKDAY
+    candidates = [f"{o}, {d}" for o in openers for d in DETAILS]
+    rng.shuffle(candidates)
+    for note in candidates:
+        if note.strip().lower() not in used:
+            return note
+    # Pool exhausted (a year-plus of entries): date-stamp keeps it unique.
+    return f"{candidates[0]} ({date.strftime('%d %b')})"
+
+
 def generate(rows, date):
     rng = random.Random(f"daily-log:{date.isoformat()}")
     recent = [r for r in rows if (date - r["date"].date()).days <= HISTORY_DAYS] or rows[-HISTORY_DAYS:]
@@ -136,8 +183,7 @@ def generate(rows, date):
     entry["satisfaction"] = weighted_choice(rng, [r["satisfaction"] for r in recent]) or "Satisfied"
     entry["energy"] = weighted_choice(rng, [r["energy"] for r in recent]) or "Medium"
 
-    pool = NOTES_WEEKEND if entry["class_min"] == 0 else NOTES_WEEKDAY
-    entry["notes"] = rng.choice(pool)
+    entry["notes"] = pick_note(rng, rows, date, entry["class_min"] == 0)
 
     # Keep the tracked total inside a real day.
     while sum(entry[k] for k in DURATIONS + ["class_min"]) > 1380:
