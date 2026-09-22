@@ -36,6 +36,9 @@ SATISFACTIONS = [
 ]
 ENERGIES = ["High", "Medium", "Low"]
 
+# No day in the sheet may record more than this many classes attended.
+MAX_CLASSES = 8
+
 # Column order of the Daily Log sheet.
 COL = {
     "date": 1,
@@ -115,6 +118,10 @@ def validate(entry):
         value = entry[key]
         if not isinstance(value, int) or value < 0:
             sys.exit(f"error: {key} must be a non-negative whole number, got {value!r}")
+    if entry["classes"] > MAX_CLASSES:
+        sys.exit(
+            f"error: classes must be at most {MAX_CLASSES}, got {entry['classes']}"
+        )
     total = sum(
         entry[k] for k in ("sleep", "fitness", "study", "coding", "class_min", "other")
     )

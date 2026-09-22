@@ -47,6 +47,9 @@ COLUMNS = {
 
 DURATIONS = ["sleep", "fitness", "study", "coding", "other"]
 
+# Hard ceiling on "Classes Attended" for any generated row.
+MAX_CLASSES = 8
+
 NOTES_WEEKDAY = [
     "Regular college day, nothing out of the ordinary",
     "Usual routine, classes and some project work",
@@ -119,7 +122,11 @@ def generate(rows, date):
         for r in same_weekday
         if r["class_min"] is not None
     ]
-    entry["class_min"], entry["classes"] = rng.choice(pairs) if pairs else (0, 0)
+    class_min, classes = rng.choice(pairs) if pairs else (0, 0)
+    if classes > MAX_CLASSES:
+        class_min = min(class_min, MAX_CLASSES * 60)
+        classes = MAX_CLASSES
+    entry["class_min"], entry["classes"] = class_min, classes
 
     entry["feeling"] = weighted_choice(rng, [r["feeling"] for r in recent]) or "Good"
     entry["satisfaction"] = weighted_choice(rng, [r["satisfaction"] for r in recent]) or "Satisfied"
