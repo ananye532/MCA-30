@@ -50,6 +50,7 @@ DURATIONS = ["sleep", "fitness", "study", "coding", "other"]
 # Hard ceilings for any generated row.
 MAX_CLASSES = 8
 MAX_SLEEP = 599  # keep sleep under 600 minutes
+MAX_FITNESS = 40  # physical activity never above 40 minutes
 
 NOTES_WEEKDAY = [
     "Regular college day, nothing out of the ordinary",
@@ -117,6 +118,7 @@ def generate(rows, date):
     for key in DURATIONS:
         entry[key] = sample_duration(rng, [r[key] for r in recent])
     entry["sleep"] = min(entry["sleep"], MAX_SLEEP)
+    entry["fitness"] = min(entry["fitness"], MAX_FITNESS)
 
     same_weekday = [r for r in rows if r["date"].weekday() == date.weekday()][-4:]
     pairs = [

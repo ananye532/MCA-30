@@ -39,6 +39,7 @@ ENERGIES = ["High", "Medium", "Low"]
 # Ceilings a row in the sheet may not exceed.
 MAX_CLASSES = 8
 MAX_SLEEP = 599  # keep sleep under 600 minutes
+MAX_FITNESS = 40  # physical activity never above 40 minutes
 
 # Column order of the Daily Log sheet.
 COL = {
@@ -126,6 +127,11 @@ def validate(entry):
     if entry["sleep"] > MAX_SLEEP:
         sys.exit(
             f"error: sleep must be at most {MAX_SLEEP} minutes, got {entry['sleep']}"
+        )
+    if entry["fitness"] > MAX_FITNESS:
+        sys.exit(
+            f"error: fitness must be at most {MAX_FITNESS} minutes, "
+            f"got {entry['fitness']}"
         )
     total = sum(
         entry[k] for k in ("sleep", "fitness", "study", "coding", "class_min", "other")
