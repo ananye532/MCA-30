@@ -36,8 +36,9 @@ SATISFACTIONS = [
 ]
 ENERGIES = ["High", "Medium", "Low"]
 
-# No day in the sheet may record more than this many classes attended.
+# Ceilings a row in the sheet may not exceed.
 MAX_CLASSES = 8
+MAX_SLEEP = 599  # keep sleep under 600 minutes
 
 # Column order of the Daily Log sheet.
 COL = {
@@ -121,6 +122,10 @@ def validate(entry):
     if entry["classes"] > MAX_CLASSES:
         sys.exit(
             f"error: classes must be at most {MAX_CLASSES}, got {entry['classes']}"
+        )
+    if entry["sleep"] > MAX_SLEEP:
+        sys.exit(
+            f"error: sleep must be at most {MAX_SLEEP} minutes, got {entry['sleep']}"
         )
     total = sum(
         entry[k] for k in ("sleep", "fitness", "study", "coding", "class_min", "other")

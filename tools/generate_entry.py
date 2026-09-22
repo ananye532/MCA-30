@@ -47,8 +47,9 @@ COLUMNS = {
 
 DURATIONS = ["sleep", "fitness", "study", "coding", "other"]
 
-# Hard ceiling on "Classes Attended" for any generated row.
+# Hard ceilings for any generated row.
 MAX_CLASSES = 8
+MAX_SLEEP = 599  # keep sleep under 600 minutes
 
 NOTES_WEEKDAY = [
     "Regular college day, nothing out of the ordinary",
@@ -115,6 +116,7 @@ def generate(rows, date):
     entry = {"date": date.isoformat()}
     for key in DURATIONS:
         entry[key] = sample_duration(rng, [r[key] for r in recent])
+    entry["sleep"] = min(entry["sleep"], MAX_SLEEP)
 
     same_weekday = [r for r in rows if r["date"].weekday() == date.weekday()][-4:]
     pairs = [
